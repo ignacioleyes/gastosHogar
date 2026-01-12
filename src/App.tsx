@@ -1,114 +1,118 @@
-import { useEffect, useState } from "react";
-import { Button, Text, HStack, VStack, Heading } from "@chakra-ui/react";
-import CountDown from "./CountDown";
-import BestScore from "./BestScore";
+import { useState } from "react";
+import { Box, Heading, Stack, Separator } from "@chakra-ui/react";
+import { useGastos } from "./hooks/useGastos";
+import {
+  Layout,
+  FormularioGasto,
+  ListaGastos,
+  ResumenMensual,
+  SelectorMes,
+} from "./components";
+import { GastoFormData } from "./types/gasto.types";
 
 function App() {
-    const storedBestScore = sessionStorage.getItem("bestScore");
-    const initialBestScore = storedBestScore
-        ? parseInt(storedBestScore, 10)
-        : 0;
-    const [bestScore, setBestScore] = useState(initialBestScore);
-    const [count, setCount] = useState(0);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [disableClickMe, setDisableClickMe] = useState(true);
-    const [message, setMessage] = useState("");
+  const {
+    gastos,
+    agregarGasto,
+    eliminarGasto,
+    filtrarGastos,
+    obtenerResumenMensual,
+    mesesDisponibles,
+  } = useGastos();
 
-    const handleIsPlaying = () => {
-        setIsPlaying(true);
-        setBestScore(count > bestScore ? count : bestScore);
-        setCount(0);
+  const [mesSeleccionado, setMesSeleccionado] = useState<string>("");
 
-        setTimeout(() => {
-            setMessage("Ready");
-        }, 1000);
+  // Obtener gastos filtrados
+  const gastosFiltrados = mesSeleccionado
+    ? filtrarGastos({ mes: mesSeleccionado })
+    : gastos;
 
-        setTimeout(() => {
-            setMessage("Set");
-        }, 2000);
+  // Obtener resumen del mes seleccionado
+  const resumen = mesSeleccionado
+    ? obtenerResumenMensual(mesSeleccionado)
+    : {
+        mes: "",
+        total: gastos.reduce((sum, g) => sum + g.importe, 0),
+        cantidad: gastos.length,
+        gastos,
+        porCategoria: gastos.reduce((acc, gasto) => {
+          acc[gasto.categoria] = (acc[gasto.categoria] || 0) + gasto.importe;
+          return acc;
+        }, {} as Record<string, number>),
+      };
 
-        setTimeout(() => {
-            setMessage("Go!");
-            setDisableClickMe(false);
-        }, 3000);
-    };
+  const handleAgregarGasto = (formData: GastoFormData) => {
+    agregarGasto(formData);
+  };
 
-    const handleStartGame = () => {
-        setTimeout(() => {
-            setMessage("");
-            setIsPlaying(false);
-            setDisableClickMe(true);
-        }, 5000);
-    };
+  const handleEliminarGasto = (id: string) => {
+    eliminarGasto(id);
+  };
 
-    const handleClick = () => {
-        if (isPlaying && message === "Go!") {
-            setCount(count + 1);
-        }
-    };
+  return (
+    <Layout title="Gastos del Hogar">
+      <Stack direction="column" gap={{ base: 6, md: 8 }} align="stretch">
+        {/* Sección: Agregar Gasto */}
+        <Box>
+          <Heading
+            as="h2"
+            size="lg"
+            mb={4}
+            color="gray.700"
+          >
+            Registrar Nuevo Gasto
+          </Heading>
+          <FormularioGasto onSubmit={handleAgregarGasto} />
+        </Box>
 
-    useEffect(() => {
-        if (message === "Go!") handleStartGame();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [message]);
+        <Separator />
 
-    useEffect(() => {
-        sessionStorage.setItem("bestScore", bestScore.toString());
-    }, [bestScore]);
+        {/* Sección: Resumen y Filtros */}
+        <Box>
+          <Heading
+            as="h2"
+            size="lg"
+            mb={4}
+            color="gray.700"
+          >
+            Resumen
+          </Heading>
 
-    return (
-        <HStack w={"100vw"} h={"100vh"} p={0} m={0} spacing={0}>
-            <BestScore score={bestScore} />
-            <VStack
-                width={"50%"}
-                h={"100%"}
-                bg={"lightgray"}
-                justifyContent={"center"}
-            >
-                <Button
-                    isDisabled={isPlaying}
-                    variant={"solid"}
-                    colorScheme={"blackAlpha"}
-                    size={"lg"}
-                    onClick={handleIsPlaying}
-                >
-                    Start Playing
-                </Button>
-            </VStack>
-            <VStack
-                width={"50%"}
-                h={"100%"}
-                bg={"whitesmoke"}
-                justifyContent={"center"}
-            >
-                {message === "Go!" && <CountDown isPlaying />}
-                <Heading
-                    color={
-                        message === "Ready"
-                            ? "#bb1e10"
-                            : message === "Set"
-                            ? "#f7b500 "
-                            : "#32A431"
-                    }
-                >
-                    {message}
-                </Heading>
+          {/* Selector de Mes */}
+          {mesesDisponibles.length > 0 && (
+            <Box mb={4}>
+              <SelectorMes
+                mesesDisponibles={mesesDisponibles}
+                mesSeleccionado={mesSeleccionado}
+                onChange={setMesSeleccionado}
+              />
+            </Box>
+          )}
 
-                <Button
-                    onClick={handleClick}
-                    isDisabled={disableClickMe}
-                    variant={"solid"}
-                    colorScheme={"blackAlpha"}
-                    size={"lg"}
-                >
-                    Click Me!
-                </Button>
-                <Text fontSize={"2rem"} fontWeight={"bold"}>
-                    Total Clicks: {count}
-                </Text>
-            </VStack>
-        </HStack>
-    );
+          {/* Resumen Mensual */}
+          <ResumenMensual resumen={resumen} />
+        </Box>
+
+        <Separator />
+
+        {/* Sección: Lista de Gastos */}
+        <Box>
+          <Heading
+            as="h2"
+            size="lg"
+            mb={4}
+            color="gray.700"
+          >
+            {mesSeleccionado ? "Gastos del Mes" : "Todos los Gastos"}
+          </Heading>
+          <ListaGastos
+            gastos={gastosFiltrados}
+            onEliminar={handleEliminarGasto}
+          />
+        </Box>
+      </Stack>
+    </Layout>
+  );
 }
 
 export default App;
