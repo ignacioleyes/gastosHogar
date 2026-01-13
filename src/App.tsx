@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Box, Heading, Stack, Separator } from "@chakra-ui/react";
-import { useGastos } from "./hooks/useGastos";
+import { Box, Heading, Stack, Separator, Button, Spinner, Text } from "@chakra-ui/react";
+import { useAuth } from "./contexts/AuthContext";
+import { useHousehold } from "./hooks/useHousehold";
+import { useSupabaseGastos } from "./hooks/useSupabaseGastos";
 import {
   Layout,
   FormularioGasto,
@@ -8,9 +10,13 @@ import {
   ResumenMensual,
   SelectorMes,
 } from "./components";
+import { AuthPage } from "./components/auth/AuthPage";
+import { HouseholdMembers } from "./components/household/HouseholdMembers";
 import { GastoFormData } from "./types/gasto.types";
 
 function App() {
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { household, loading: householdLoading } = useHousehold();
   const {
     gastos,
     agregarGasto,
@@ -18,7 +24,7 @@ function App() {
     filtrarGastos,
     obtenerResumenMensual,
     mesesDisponibles,
-  } = useGastos();
+  } = useSupabaseGastos(household?.id || null);
 
   const [mesSeleccionado, setMesSeleccionado] = useState<string>("");
 
@@ -41,17 +47,85 @@ function App() {
         }, {} as Record<string, number>),
       };
 
-  const handleAgregarGasto = (formData: GastoFormData) => {
-    agregarGasto(formData);
+  const handleAgregarGasto = async (formData: GastoFormData) => {
+    try {
+      await agregarGasto(formData);
+    } catch (error) {
+      console.error("Error adding expense:", error);
+    }
   };
 
-  const handleEliminarGasto = (id: string) => {
-    eliminarGasto(id);
+  const handleEliminarGasto = async (id: string) => {
+    try {
+      await eliminarGasto(id);
+    } catch (error) {
+      console.error("Error deleting expense:", error);
+    }
   };
 
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
+  // Show loading state while checking auth or loading household
+  if (authLoading || (user && householdLoading)) {
+    return (
+      <Box
+        minH="100vh"
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        bg="gray.50"
+      >
+        <Stack direction="column" align="center" gap={4}>
+          <Spinner size="xl" color="primary.500" />
+          <Text color="gray.600">Cargando...</Text>
+        </Stack>
+      </Box>
+    );
+  }
+
+  // Show auth page if not logged in
+  if (!user) {
+    return <AuthPage />;
+  }
+
+  // Show main app if logged in
   return (
     <Layout title="Gastos del Hogar">
       <Stack direction="column" gap={{ base: 6, md: 8 }} align="stretch">
+        {/* User info and logout */}
+        <Box>
+          <Stack direction="row" justify="space-between" align="center">
+            <Text fontSize="sm" color="gray.600">
+              {user.email}
+            </Text>
+            <Button
+              size="sm"
+              variant="ghost"
+              colorPalette="red"
+              onClick={handleSignOut}
+            >
+              Cerrar Sesión
+            </Button>
+          </Stack>
+        </Box>
+
+        {/* Household Members */}
+        {household && (
+          <Box>
+            <HouseholdMembers
+              householdId={household.id}
+              householdName={household.name}
+            />
+          </Box>
+        )}
+
+        <Separator />
         {/* Sección: Agregar Gasto */}
         <Box>
           <Heading

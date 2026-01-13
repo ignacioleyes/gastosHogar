@@ -22,7 +22,7 @@ const toaster = createToaster({
 });
 
 interface FormularioGastoProps {
-  onSubmit: (data: GastoFormData) => void;
+  onSubmit: (data: GastoFormData) => Promise<void> | void;
   onCancel?: () => void;
   initialData?: Partial<GastoFormData>;
   submitLabel?: string;
@@ -58,7 +58,7 @@ export function FormularioGasto({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const validation = validarFormularioGasto(formData);
@@ -76,7 +76,7 @@ export function FormularioGasto({
     setIsSubmitting(true);
 
     try {
-      onSubmit(formData);
+      await onSubmit(formData);
 
       setFormData({
         importe: "",

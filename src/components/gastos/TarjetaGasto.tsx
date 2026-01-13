@@ -60,8 +60,11 @@ export function TarjetaGasto({ gasto, onEliminar }: TarjetaGastoProps) {
           )}
         </Stack>
 
-        <DialogRoot placement="center" motionPreset="slide-in-bottom">
-          <DialogBackdrop />
+        <DialogRoot placement="center" size="sm">
+          <DialogBackdrop
+            bg="blackAlpha.600"
+            backdropFilter="blur(4px)"
+          />
           <DialogTrigger asChild>
             <IconButton
               aria-label="Eliminar gasto"
@@ -73,25 +76,33 @@ export function TarjetaGasto({ gasto, onEliminar }: TarjetaGastoProps) {
             </IconButton>
           </DialogTrigger>
 
-          <DialogContent>
+          <DialogContent
+            position="fixed"
+            top="50%"
+            left="50%"
+            transform="translate(-50%, -50%)"
+            maxW="400px"
+            w="90%"
+            m={0}
+          >
             <DialogHeader>
               <DialogTitle>Eliminar Gasto</DialogTitle>
               <DialogCloseTrigger />
             </DialogHeader>
-            <DialogBody>
+            <DialogBody pb={4}>
               <Text>
                 ¿Está seguro de eliminar este gasto de {formatearMoneda(gasto.importe)}?
                 Esta acción no se puede deshacer.
               </Text>
             </DialogBody>
-            <DialogFooter>
+            <DialogFooter gap={2}>
               <DialogActionTrigger asChild>
-                <Button variant="outline">Cancelar</Button>
+                <Button variant="outline" flex={1}>Cancelar</Button>
               </DialogActionTrigger>
               <Button
                 colorPalette="red"
                 onClick={() => onEliminar(gasto.id)}
-                ml={3}
+                flex={1}
               >
                 Eliminar
               </Button>
