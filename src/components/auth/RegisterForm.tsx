@@ -102,6 +102,8 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
           </Text>
           <Input
             type="email"
+            name="email"
+            autoComplete="username"
             placeholder="tu@email.com"
             value={formData.email}
             onChange={(e) => handleChange("email", e.target.value)}
@@ -120,6 +122,8 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
           </Text>
           <Input
             type="password"
+            name="password"
+            autoComplete="new-password"
             placeholder="••••••••"
             value={formData.password}
             onChange={(e) => handleChange("password", e.target.value)}
@@ -138,6 +142,8 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
           </Text>
           <Input
             type="password"
+            name="confirm-password"
+            autoComplete="new-password"
             placeholder="••••••••"
             value={formData.confirmPassword}
             onChange={(e) => handleChange("confirmPassword", e.target.value)}

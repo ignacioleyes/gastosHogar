@@ -101,6 +101,8 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
           </Text>
           <Input
             type="email"
+            name="email"
+            autoComplete="username"
             placeholder="tu@email.com"
             value={formData.email}
             onChange={(e) => handleChange("email", e.target.value)}
@@ -119,6 +121,8 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
           </Text>
           <Input
             type="password"
+            name="password"
+            autoComplete="current-password"
             placeholder="••••••••"
             value={formData.password}
             onChange={(e) => handleChange("password", e.target.value)}
