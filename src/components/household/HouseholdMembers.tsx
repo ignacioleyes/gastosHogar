@@ -102,7 +102,7 @@ export function HouseholdMembers({ householdId, householdName }: HouseholdMember
         .select("id")
         .eq("household_id", householdId)
         .eq("user_id", userData)
-        .single();
+        .maybeSingle();
 
       if (existingMember) {
         toaster.create({
